@@ -1,0 +1,20 @@
+.env
+.env.*
+!.env.example
+
+# Sites and runtime
+sites/
+data/
+logs/
+
+# Custom apps folder (keep README)
+custom-apps/*
+!custom-apps/README.md
+
+# OS files
+.DS_Store
+
+# Node/Python caches
+node_modules/
+__pycache__/
+*.pyc

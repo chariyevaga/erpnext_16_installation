@@ -1,0 +1,56 @@
+services:
+  mariadb:
+    image: mariadb:10.6
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    ports:
+      - "${DB_PORT}:3306"
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT}:6379"
+
+  erpnext:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        CUSTOM_APPS: ${EXTRA_APPS}
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+      - redis
+    environment:
+      SITE_NAME: ${SITE_NAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_CACHE: ${REDIS_CACHE}
+      REDIS_QUEUE: ${REDIS_QUEUE}
+      REDIS_SOCKETIO: ${REDIS_SOCKETIO}
+      SOCKETIO_PORT: ${SOCKETIO_PORT}
+    volumes:
+      - sites_data:/home/frappe/frappe-bench/sites
+      - ./logs:/home/frappe/frappe-bench/logs
+      - ./custom-apps:/opt/frappe/custom-apps
+    ports:
+      - "${WEB_PORT}:8000"
+      - "${SOCKETIO_PORT}:9000"
+
+volumes:
+  mariadb_data:
+  redis_data:
+  sites_data:
