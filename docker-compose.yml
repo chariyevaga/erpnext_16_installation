@@ -29,8 +29,7 @@ services:
       - ./scripts/backup-db.sh:/opt/backup/backup-db.sh:ro
       - ./scripts/backup-cron:/etc/cron.d/mariadb-backup:ro
     command: >
-      sh -lc "chmod +x /opt/backup/backup-db.sh &&
-              crontab /etc/cron.d/mariadb-backup &&
+      sh -lc "crontab /etc/cron.d/mariadb-backup &&
               touch /var/log/backup.log &&
               cron -f"
 
