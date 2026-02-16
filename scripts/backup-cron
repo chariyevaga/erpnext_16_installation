@@ -1,0 +1,5 @@
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Run every day at 00:00 (container time)
+0 0 * * * /opt/backup/backup-db.sh >> /var/log/backup.log 2>&1

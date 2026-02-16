@@ -12,6 +12,28 @@ services:
     ports:
       - "${DB_PORT}:3306"
 
+  mariadb-backup:
+    image: mariadb:10.6
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      TZ: ${TZ:-UTC}
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup-db.sh:/opt/backup/backup-db.sh:ro
+      - ./scripts/backup-cron:/etc/cron.d/mariadb-backup:ro
+    command: >
+      sh -lc "chmod +x /opt/backup/backup-db.sh &&
+              crontab /etc/cron.d/mariadb-backup &&
+              touch /var/log/backup.log &&
+              cron -f"
+
   redis:
     image: redis:7-alpine
     restart: unless-stopped
