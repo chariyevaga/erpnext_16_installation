@@ -1,6 +1,8 @@
 services:
   mariadb:
-    image: mariadb:10.6
+    build:
+      context: .
+      dockerfile: Dockerfile.mariadb
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
@@ -9,29 +11,11 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - mariadb_data:/var/lib/mysql
-    ports:
-      - "${DB_PORT}:3306"
-
-  mariadb-backup:
-    image: mariadb:10.6
-    restart: unless-stopped
-    depends_on:
-      - mariadb
-    environment:
-      DB_HOST: mariadb
-      DB_PORT: 3306
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      TZ: ${TZ:-UTC}
-    volumes:
       - ./backups:/backups
       - ./scripts/backup-db.sh:/opt/backup/backup-db.sh:ro
       - ./scripts/backup-cron:/etc/cron.d/mariadb-backup:ro
-    command: >
-      sh -lc "crontab /etc/cron.d/mariadb-backup &&
-              touch /var/log/backup.log &&
-              cron -f"
+    ports:
+      - "${DB_PORT}:3306"
 
   redis:
     image: redis:7-alpine

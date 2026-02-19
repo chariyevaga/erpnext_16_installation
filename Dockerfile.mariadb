@@ -1,0 +1,15 @@
+FROM mariadb:10.6
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends cron \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY scripts/backup-db.sh /opt/backup/backup-db.sh
+COPY scripts/backup-cron /etc/cron.d/mariadb-backup
+RUN chmod +x /opt/backup/backup-db.sh && chmod 0644 /etc/cron.d/mariadb-backup
+
+COPY scripts/mariadb-with-backup.sh /usr/local/bin/mariadb-with-backup.sh
+RUN chmod +x /usr/local/bin/mariadb-with-backup.sh
+
+ENTRYPOINT ["/usr/local/bin/mariadb-with-backup.sh"]
+CMD ["mysqld"]
