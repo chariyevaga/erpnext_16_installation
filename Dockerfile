@@ -3,13 +3,13 @@ FROM frappe/erpnext:version-16
 USER root
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        build-essential \
-        curl \
-        git \
-        libssl-dev \
-        mariadb-client \
-        pkg-config \
-        redis-tools \
+    build-essential \
+    curl \
+    git \
+    libssl-dev \
+    mariadb-client \
+    pkg-config \
+    redis-tools \
     && rm -rf /var/lib/apt/lists/* \
     && chown -R frappe:frappe /home/frappe/.nvm
 

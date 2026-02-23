@@ -6,10 +6,13 @@
 sites/
 data/
 logs/
+backups/*
+!backups/.gitkeep
 
 # Custom apps folder (keep README)
 custom-apps/*
 !custom-apps/README.md
+!custom-apps/.gitkeep
 
 # OS files
 .DS_Store

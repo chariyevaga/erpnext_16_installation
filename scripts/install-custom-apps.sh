@@ -11,8 +11,7 @@ ALWAYS_APPS=(
   "https://github.com/frappe/hrms#version-16"
   "https://github.com/frappe/crm#develop"
   "https://github.com/frappe/print_designer#develop"
-  "https://github.com/frappe/gameplan#develop"
-  "https://github.com/defendicon/POS-Awesome-V15"
+  https://github.com/The-Commit-Company/raven#develop
 )
 
 cd "$BENCH_DIR"
