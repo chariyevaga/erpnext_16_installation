@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile.mariadb
     restart: unless-stopped
     environment:
+      TZ: ${TZ}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USER}
@@ -20,6 +21,8 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    environment:
+      TZ: ${TZ}
     volumes:
       - redis_data:/data
     ports:
@@ -36,6 +39,7 @@ services:
       - mariadb
       - redis
     environment:
+      TZ: ${TZ}
       SITE_NAME: ${SITE_NAME}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
