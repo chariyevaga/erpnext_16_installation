@@ -11,13 +11,13 @@ ALWAYS_APPS=(
   "https://github.com/frappe/hrms#version-16"
   "https://github.com/frappe/crm#develop"
   "https://github.com/frappe/print_designer#develop"
-  https://github.com/The-Commit-Company/raven#develop
+  "https://github.com/The-Commit-Company/raven#main"
 )
 
 cd "$BENCH_DIR"
 
 ensure_node_tooling() {
-  mkdir -p "$NPM_GLOBAL"
+  mkdir -p "$NPM_GLOBAL"  
   npm config set prefix "$NPM_GLOBAL" >/dev/null 2>&1 || true
   export PATH="$NPM_GLOBAL/bin:$PATH"
 
