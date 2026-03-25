@@ -16,11 +16,24 @@ RUN apt-get update \
 USER frappe
 WORKDIR /home/frappe/frappe-bench
 
+ARG FRAPPE_VERSION=
+ARG ERP_VERSION=
+
 ENV CARGO_HOME=/home/frappe/.cargo \
     RUSTUP_HOME=/home/frappe/.rustup \
     PATH=/home/frappe/.cargo/bin:$PATH
 
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+
+# Replace core apps with pinned versions if requested
+RUN if [ -n "$FRAPPE_VERSION" ]; then \
+    rm -rf "apps/frappe"; \
+    bench get-app --branch "$FRAPPE_VERSION" https://github.com/frappe/frappe; \
+    fi \
+    && if [ -n "$ERP_VERSION" ]; then \
+    rm -rf "apps/erpnext"; \
+    bench get-app --branch "$ERP_VERSION" https://github.com/frappe/erpnext; \
+    fi
 
 # Copy optional local custom apps into image
 COPY --chown=frappe:frappe custom-apps/ /opt/frappe/custom-apps/

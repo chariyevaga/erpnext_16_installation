@@ -5,6 +5,8 @@ BENCH_DIR="/home/frappe/frappe-bench"
 SITE_NAME="${SITE_NAME:-site1.local}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-change_me}"
 DB_ROOT_PASSWORD="${DB_ROOT_PASSWORD:-change_me}"
+FRAPPE_VERSION="${FRAPPE_VERSION:-}"
+ERP_VERSION="${ERP_VERSION:-}"
 DB_NAME="${DB_NAME:-}"
 DB_USER="${DB_USER:-}"
 DB_PASSWORD="${DB_PASSWORD:-}"
@@ -44,6 +46,32 @@ for app in $(ls -1 apps); do
     echo "$app" >> "sites/apps.txt"
   fi
 done
+
+pin_core_app_version() {
+  local app="$1"
+  local version="$2"
+  local app_dir="$BENCH_DIR/apps/$app"
+
+  if [ -z "$version" ] || [ ! -d "$app_dir/.git" ]; then
+    return 0
+  fi
+
+  (
+    cd "$app_dir"
+    if git tag --points-at HEAD | grep -q -x "$version"; then
+      echo "Pinning $app to $version (already at tag, skipping fetch)"
+      return 0
+    fi
+
+    echo "Pinning $app to $version"
+    git fetch --tags --quiet || true
+    git checkout --quiet "$version" || true
+  )
+}
+
+# Pin core apps to the requested versions (if provided)
+pin_core_app_version "frappe" "$FRAPPE_VERSION"
+pin_core_app_version "erpnext" "$ERP_VERSION"
 
 # Wait for MariaDB
 until mysqladmin ping -h"$DB_HOST" -P"$DB_PORT" --silent; do

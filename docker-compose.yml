@@ -34,6 +34,8 @@ services:
       dockerfile: Dockerfile
       args:
         CUSTOM_APPS: ${EXTRA_APPS}
+        FRAPPE_VERSION: v16.11.0
+        ERP_VERSION: v16.9.0
     restart: unless-stopped
     depends_on:
       - mariadb
@@ -42,6 +44,8 @@ services:
       TZ: ${TZ}
       SITE_NAME: ${SITE_NAME}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      FRAPPE_VERSION: v16.11.0
+      ERP_VERSION: v16.9.0
       DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       DB_HOST: mariadb
       DB_PORT: 3306

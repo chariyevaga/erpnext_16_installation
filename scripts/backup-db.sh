@@ -50,8 +50,8 @@ mysqldump \
 
 echo "[backup] Completed: ${BACKUP_DIR}/${FILENAME}"
 
-# Prune backups older than 10 days
-find "$BACKUP_DIR" -type f -name "mariadb_*.sql.gz" -mtime +10 -print -delete
+# Prune backups older than 30 days
+find "$BACKUP_DIR" -type f -name "mariadb_*.sql.gz" -mtime +30 -print -delete
 
 # Keep at most 100 newest backups
 mapfile -t backups < <(ls -1t "$BACKUP_DIR"/mariadb_*.sql.gz 2>/dev/null || true)
