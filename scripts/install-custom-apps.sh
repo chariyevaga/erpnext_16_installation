@@ -9,6 +9,10 @@ NPM_GLOBAL="/home/frappe/.npm-global"
 # Always-install apps (hardcoded, not controlled by env)
 ALWAYS_APPS=(
   "https://github.com/defendicon/POS-Awesome-V15.git#15.23.1"
+  "https://github.com/frappe/hrms.git#v16.4.3"
+  "https://github.com/frappe/crm.git#version-16"
+  "https://github.com/frappe/print_designer.git#version-16"
+  "https://github.com/frappe/raven.git#version-16"
 )
 
 cd "$BENCH_DIR"
@@ -105,22 +109,21 @@ def guard_child_table(src_text, fieldname):
     if f"fields_dict?.{fieldname}" in src_text:
         return src_text
     pattern = (
-        rf'(\\n\\t\\t)'
-        rf'frm\\.set_query\\("account", "{fieldname}", function \\(doc\\) \\{{'
-        rf'[\\s\\S]*?\\n\\t\\t\\}}\\);'
+        r'\n\t\tfrm\.set_query\("account", "'
+        + fieldname +
+        r'", function \(doc\) \{[\s\S]*?\n\t\t\}\);\n'
     )
     m = re.search(pattern, src_text)
     if not m:
         return src_text
     block = m.group(0)
-    indent = m.group(1)
-    replacement = (
-        f"{indent}const {fieldname}_field = frm.fields_dict?.{fieldname};\\n"
-        f"{indent}if ({fieldname}_field && {fieldname}_field.grid) {{\\n"
-        f"{block}\\n"
-        f"{indent}}}"
+    guard = (
+        f"\t\tconst {fieldname}_field = frm.fields_dict?.{fieldname};\n"
+        f"\t\tif ({fieldname}_field && {fieldname}_field.grid) {{\n"
+        f"{block}"
+        f"\t\t}}\n"
     )
-    return src_text.replace(block, replacement, 1)
+    return src_text.replace(block, guard, 1)
 
 src2 = guard_child_table(src, "posa_allowed_expense_accounts")
 src3 = guard_child_table(src2, "posa_allowed_source_accounts")
