@@ -10,25 +10,38 @@ NPM_GLOBAL="/home/frappe/.npm-global"
 ALWAYS_APPS=(
   "https://github.com/defendicon/POS-Awesome-V15.git#15.23.1"
   "https://github.com/frappe/hrms.git#v16.4.3"
-  "https://github.com/frappe/crm.git#version-16"
-  "https://github.com/frappe/print_designer.git#version-16"
-  "https://github.com/frappe/raven.git#version-16"
+  "https://github.com/frappe/crm.git#main"
+  "https://github.com/frappe/print_designer.git#main"
+  "https://github.com/The-Commit-Company/raven#develop"
 )
-
 cd "$BENCH_DIR"
 
 ensure_node_tooling() {
-  mkdir -p "$NPM_GLOBAL"  
-  npm config set prefix "$NPM_GLOBAL" >/dev/null 2>&1 || true
-  export PATH="$NPM_GLOBAL/bin:$PATH"
+  # Prefer nvm-managed Node if available
+  if [ -s "/home/frappe/.nvm/nvm.sh" ]; then
+    # Avoid nvm prefix conflicts if a legacy .npmrc exists
+    if [ -f "/home/frappe/.npmrc" ] && grep -q '^prefix=' "/home/frappe/.npmrc"; then
+      rm -f "/home/frappe/.npmrc"
+    fi
+    . "/home/frappe/.nvm/nvm.sh"
+    nvm use --silent node >/dev/null 2>&1 || nvm use --silent default >/dev/null 2>&1 || true
+  fi
+
+  if ! command -v npm >/dev/null 2>&1; then
+    return 0
+  fi
 
   if command -v corepack >/dev/null 2>&1; then
     corepack enable >/dev/null 2>&1 || true
     corepack prepare pnpm@latest --activate >/dev/null 2>&1 || true
+    corepack prepare yarn@1.22.22 --activate >/dev/null 2>&1 || true
   fi
 
   if ! command -v pnpm >/dev/null 2>&1; then
     npm install -g pnpm >/dev/null 2>&1 || true
+  fi
+  if ! command -v yarn >/dev/null 2>&1; then
+    npm install -g yarn >/dev/null 2>&1 || true
   fi
 }
 
@@ -82,6 +95,20 @@ install_app_from_url() {
   if [[ "$app_url" == *"#"* ]]; then
     url="${app_url%%#*}"
     branch="${app_url##*#}"
+  fi
+
+  local repo_name
+  repo_name="$(basename "$url")"
+  repo_name="${repo_name%.git}"
+
+  # Skip if app already present (handle POS Awesome repo naming)
+  if [ "$repo_name" = "POS-Awesome-V15" ] && [ -d "apps/posawesome" ]; then
+    echo "[custom-apps] posawesome already present, skipping"
+    return 0
+  fi
+  if [ -d "apps/$repo_name" ]; then
+    echo "[custom-apps] $repo_name already present, skipping"
+    return 0
   fi
 
   if [ -n "$branch" ]; then
