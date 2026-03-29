@@ -156,5 +156,15 @@ for app in $(ls -1 apps); do
   fi
 done
 
+# Avoid setup wizard loop by forcing setup complete + home page defaults
+echo "Ensuring setup is marked complete and home page is set..."
+bench --site "$SITE_NAME" execute 'frappe.db.set_single_value' --kwargs \
+  '{"doctype":"System Settings","fieldname":"setup_complete","value":1}'
+bench --site "$SITE_NAME" execute 'frappe.db.set_single_value' --kwargs \
+  '{"doctype":"System Settings","fieldname":"home_page","value":"home"}'
+bench --site "$SITE_NAME" execute 'frappe.db.set_default' --args '["setup_complete","1"]'
+bench --site "$SITE_NAME" execute 'frappe.db.set_default' --args '["desktop:home_page","home"]'
+bench --site "$SITE_NAME" clear-cache
+
 # Start bench (web + workers + scheduler + socketio)
 exec bench start
