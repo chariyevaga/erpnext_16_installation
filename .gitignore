@@ -1,6 +1,15 @@
 .env
 .env.*
 !.env.example
+/.envrc
+/.secrets/
+/secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.asc
 
 # Sites and runtime
 sites/
