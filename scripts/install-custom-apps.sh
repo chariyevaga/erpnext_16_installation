@@ -249,26 +249,34 @@ patch_raven_user_image() {
 
   python - <<'PY' "$file"
 import re, sys
-path = sys.argv[1]
-src = open(path, "r", encoding="utf-8").read()
+from pathlib import Path
 
-if "get_url" in src and "user_image.startswith" in src:
+path = Path(sys.argv[1])
+src = path.read_text(encoding="utf-8")
+
+if "SAFE_USER_IMAGE_URL" in src:
     sys.exit(0)
 
-pattern = r"(def update_photo_from_user\\(self\\):[\\s\\S]*?\\n\\t\\tuser_image = frappe\\.db\\.get_value\\(\"User\", self\\.user, \"user_image\"\\)\\n)"
+pattern = (
+    r"(def update_photo_from_user\\(self\\):[\\s\\S]*?\\n"
+    r"\\t\\tuser_image = frappe\\.db\\.get_value\\(\"User\", self\\.user, \"user_image\"\\)\\n)"
+)
 replacement = (
     "\\1"
-    "\\t\\tif user_image and not user_image.startswith((\"http://\", \"https://\")):\\n"
-    "\\t\\t\\tfrom frappe.utils import get_url\\n"
-    "\\t\\t\\tuser_image = get_url(user_image)\\n"
+    "\\t\\t# SAFE_USER_IMAGE_URL\\n"
+    "\\t\\tif user_image:\\n"
+    "\\t\\t\\tif user_image.startswith(\"/\"):\\n"
+    "\\t\\t\\t\\tfrom frappe.utils import get_url\\n"
+    "\\t\\t\\t\\tuser_image = get_url(user_image)\\n"
+    "\\t\\t\\telif not (user_image.startswith(\"http://\") or user_image.startswith(\"https://\")):\\n"
+    "\\t\\t\\t\\tuser_image = None\\n"
 )
 
 new_src, n = re.subn(pattern, replacement, src, count=1)
 if n == 0:
     sys.exit(0)
 
-with open(path, "w", encoding="utf-8") as f:
-    f.write(new_src)
+path.write_text(new_src, encoding="utf-8")
 PY
 }
 
@@ -326,6 +334,7 @@ fi
 patch_posawesome_profile_js
 patch_crm_demo_data
 patch_crm_setup_hook
+patch_raven_user_image
 patch_raven_setup_guard
 patch_raven_user_image
 
