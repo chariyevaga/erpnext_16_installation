@@ -1,0 +1,18 @@
+[
+  {
+    "url": "https://github.com/defendicon/POS-Awesome-V15.git",
+    "branch": "15.23.1"
+  },
+  {
+    "url": "https://github.com/frappe/hrms.git",
+    "branch": "v16.4.3"
+  },
+  {
+    "url": "https://github.com/frappe/crm.git",
+    "branch": "main"
+  },
+  {
+    "url": "https://github.com/The-Commit-Company/raven",
+    "branch": "develop"
+  }
+]

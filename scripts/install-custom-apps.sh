@@ -5,6 +5,7 @@ BENCH_DIR="/home/frappe/frappe-bench"
 CUSTOM_DIR="/opt/frappe/custom-apps"
 COMMON_SITE_CONFIG="$BENCH_DIR/sites/common_site_config.json"
 NPM_GLOBAL="/home/frappe/.npm-global"
+APPS_JSON="/opt/frappe/apps.json"
 
 # Always-install apps (hardcoded, not controlled by env)
 ALWAYS_APPS=(
@@ -118,6 +119,28 @@ install_app_from_url() {
     echo "[custom-apps] Installing from URL: $url"
     bench get-app "$url"
   fi
+}
+
+apps_from_json() {
+  if [ ! -f "$APPS_JSON" ]; then
+    return 0
+  fi
+
+  python - <<'PY' "$APPS_JSON"
+import json, sys
+path = sys.argv[1]
+with open(path, "r", encoding="utf-8") as f:
+    data = json.load(f)
+for entry in data or []:
+    url = entry.get("url")
+    branch = entry.get("branch")
+    if not url:
+        continue
+    if branch:
+        print(f"{url}#{branch}")
+    else:
+        print(url)
+PY
 }
 
 patch_posawesome_profile_js() {
@@ -249,16 +272,61 @@ with open(path, "w", encoding="utf-8") as f:
 PY
 }
 
-# Install apps that must always be present
+patch_raven_setup_guard() {
+  local file="$BENCH_DIR/apps/raven/raven/raven/doctype/raven_user/raven_user.py"
+  if [ ! -f "$file" ]; then
+    return 0
+  fi
+
+  python - <<'PY' "$file"
+import re, sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+src = path.read_text(encoding="utf-8")
+
+guard = (
+    "def add_user_to_raven(doc, method):\n"
+    "\tif not frappe.db.get_single_value(\"System Settings\", \"setup_complete\"):\n"
+    "\t\treturn\n"
+)
+
+if "setup_complete" in src and "add_user_to_raven" in src:
+    # already guarded or customized
+    sys.exit(0)
+
+new_src, n = re.subn(
+    r"def add_user_to_raven\(doc, method\):\n",
+    guard,
+    src,
+    count=1,
+)
+
+if n == 0:
+    sys.exit(0)
+
+path.write_text(new_src, encoding="utf-8")
+PY
+}
+
+# Install apps from apps.json (frappe_docker style) if present, otherwise fallback
 ensure_node_tooling
-for url in "${ALWAYS_APPS[@]}"; do
-  install_app_from_url "$url"
-done
+json_apps=$(apps_from_json || true)
+if [ -n "$json_apps" ]; then
+  while IFS= read -r url; do
+    install_app_from_url "$url"
+  done <<< "$json_apps"
+else
+  for url in "${ALWAYS_APPS[@]}"; do
+    install_app_from_url "$url"
+  done
+fi
 
 # Apply local compatibility patch for POS Awesome if present
 patch_posawesome_profile_js
 patch_crm_demo_data
 patch_crm_setup_hook
+patch_raven_setup_guard
 patch_raven_user_image
 
 # Install apps from local directories (if any)

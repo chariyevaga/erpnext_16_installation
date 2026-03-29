@@ -41,7 +41,16 @@ COPY --chown=frappe:frappe scripts/install-custom-apps.sh /opt/frappe/install-cu
 RUN chmod +x /opt/frappe/install-custom-apps.sh
 
 ARG CUSTOM_APPS=""
+ARG APPS_JSON_BASE64=""
 ENV CUSTOM_APPS=${CUSTOM_APPS}
+ENV APPS_JSON_BASE64=${APPS_JSON_BASE64}
+
+# Optional apps.json (frappe_docker style)
+COPY --chown=frappe:frappe apps.json /opt/frappe/apps.json
+
+RUN if [ -n "$APPS_JSON_BASE64" ]; then \
+    echo "$APPS_JSON_BASE64" | base64 -d > /opt/frappe/apps.json; \
+  fi
 RUN /opt/frappe/install-custom-apps.sh
 
 COPY --chown=frappe:frappe scripts/init-site.sh /opt/frappe/init-site.sh
